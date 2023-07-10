@@ -14,3 +14,10 @@ a couple of seconds to compute.
 The client will pick the servers to send the request to using consistent hashing of the password.
 
 We'll deploy multiple instances of the server using Docker. Clients will get the server addresses from config.
+
+# Tasks
+
+[] run in server mode if `--server` flag present
+[] server must listen to port 8989
+[] server must respond to 'PING' with 'PONG'
+[] client should have ping command
