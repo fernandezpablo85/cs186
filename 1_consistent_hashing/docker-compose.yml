@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  bcache_0:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8889:8888
+
+  bcache_1:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8890:8888
