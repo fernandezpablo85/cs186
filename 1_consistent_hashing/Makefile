@@ -3,7 +3,7 @@
 FILTER = "label=com.docker.compose.project=1_consistent_hashing"
 # given something like 0.0.0.0:8891->8888/tcp, extract the host port: 8891
 JQ_PORT_PARSE = (.Ports | split("->")[0] | split(":")[1])
-JQ_EXPRESSION = '{id: .ID, ports: $(JQ_PORT_PARSE)}'
+JQ_EXPRESSION = '[.[] | {id: .ID, ports: $(JQ_PORT_PARSE)}]'
 
 
 run:
@@ -13,5 +13,5 @@ run:
 
 ports:
 	@echo "Extracting port information..."
-	@docker ps --filter $(FILTER) --format  '{{json . }}'| jq $(JQ_EXPRESSION) > ports.json
+	@docker ps --filter $(FILTER) --format  '{{json . }}'| jq -s $(JQ_EXPRESSION) > ports.json
 	@echo "Port information written to ports.json"
