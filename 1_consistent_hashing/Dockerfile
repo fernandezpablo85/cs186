@@ -15,4 +15,4 @@ FROM debian:buster-slim
 COPY --from=builder /usr/src/target/release/bcache .
 
 # Set the start command to our binary.
-CMD ["./bcache", "--server"]
+CMD ["./bcache", "server"]
