@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8889:8888
+      - 8888
     init: true
 
   bcache_1:
@@ -13,7 +13,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8890:8888
+      - 8888
     init: true
 
   bcache_2:
@@ -21,5 +21,5 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - 8891:8888
+      - 8888
     init: true
