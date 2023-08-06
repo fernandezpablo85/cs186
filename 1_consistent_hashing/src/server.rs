@@ -50,11 +50,11 @@ fn handle_req(mut socket: TcpStream) {
     println!("request: {}", request);
     match command {
         Some(ServerCommand::Ping) => {
-            socket.write(b"PONG\n").unwrap();
+            socket.write(b"PONG").unwrap();
         }
         Some(ServerCommand::Hash(plain)) => {
             let h = hash(&plain);
-            socket.write(format!("{h}\n").as_bytes()).unwrap();
+            socket.write(format!("{h}").as_bytes()).unwrap();
         }
         None => {
             socket

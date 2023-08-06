@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 bcrypt = "0.15.0"
 clap = { version = "4.3.17", features = ["derive"] }
+rand = "0.8.5"
+serde_json = "1.0.104"
