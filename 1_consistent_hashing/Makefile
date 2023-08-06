@@ -9,9 +9,9 @@ JQ_EXPRESSION = '[.[] | {id: .ID, ports: $(JQ_PORT_PARSE)}]'
 run:
 	docker-compose up -d
 	sleep 2 # Give services time to start
-	make ports
+	make nodes
 
-ports:
-	@echo "Extracting port information..."
-	@docker ps --filter $(FILTER) --format  '{{json . }}'| jq -s $(JQ_EXPRESSION) > ports.json
-	@echo "Port information written to ports.json"
+nodes:
+	@echo "Extracting nodes information..."
+	@docker ps --filter $(FILTER) --format  '{{json . }}'| jq -s $(JQ_EXPRESSION) > nodes.json
+	@echo "Port information written to nodes.json"
