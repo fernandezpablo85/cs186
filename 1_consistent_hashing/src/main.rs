@@ -37,23 +37,26 @@ fn client(cli: Cli) {
     match cli.cmd {
         ClientCommand::Ping => {
             let port = random_port().unwrap();
-            println!("pinging 0.0.0.0:{}", port);
             let command = "PING";
-            println!("> {command}");
+            println!("client > {command}");
             let res = send(&port, "PING").unwrap();
-            println!("< {res}");
+            println!("{} < {res}", host(&port));
         }
         ClientCommand::Hash { plain } => {
             let port = random_port().unwrap();
             let command = format!("HASH {plain}");
-            println!("> {command}");
+            println!("client > {command}");
             let res = send(&port, &command).unwrap();
-            println!("< {res}");
+            println!("{} < {res}", host(&port));
         }
         ClientCommand::Server => {
             panic!("can't happen, we're running in client mode")
         }
     }
+}
+
+fn host(port: &str) -> String {
+    format!("0.0.0.0:{port}")
 }
 
 fn random_port() -> std::io::Result<String> {
@@ -67,8 +70,7 @@ fn random_port() -> std::io::Result<String> {
 }
 
 fn send(port: &str, command: &str) -> std::io::Result<String> {
-    let host = format!("0.0.0.0:{port}");
-    let mut stream = TcpStream::connect(host)?;
+    let mut stream = TcpStream::connect(host(port))?;
     stream.write_all(command.as_bytes())?;
     let mut response = String::new();
     stream.read_to_string(&mut response)?;
