@@ -15,3 +15,6 @@ nodes:
 	@echo "Extracting nodes information..."
 	@docker ps --filter $(FILTER) --format  '{{json . }}'| jq -s $(JQ_EXPRESSION) > nodes.json
 	@echo "Port information written to nodes.json"
+
+stop:
+	docker-compose down
