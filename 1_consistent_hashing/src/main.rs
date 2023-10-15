@@ -16,6 +16,16 @@ enum ClientCommand {
     Server,
 }
 
+impl ClientCommand {
+    fn to_string(&self) -> String {
+        match self {
+            ClientCommand::Ping => String::from("PING"),
+            ClientCommand::Hash { plain } => format!("HASH {plain}"),
+            ClientCommand::Server => String::from("SERVER"),
+        }
+    }
+}
+
 #[derive(Parser)]
 #[clap(version = "1.0", author = "Pablo Fernandez")]
 struct Cli {
@@ -28,30 +38,18 @@ fn main() {
     if args.cmd == ClientCommand::Server {
         server::server()
     } else {
-        // let nodes = parse_nodes_json();
         client(args)
     }
 }
 
 fn client(cli: Cli) {
-    match cli.cmd {
-        ClientCommand::Ping => {
-            let port = random_port().unwrap();
-            let command = "PING";
-            println!("client > {command}");
-            let res = send(&port, "PING").unwrap();
-            println!("{} < {res}", host(&port));
-        }
-        ClientCommand::Hash { plain } => {
-            let port = random_port().unwrap();
-            let command = format!("HASH {plain}");
-            println!("client > {command}");
-            let res = send(&port, &command).unwrap();
-            println!("{} < {res}", host(&port));
-        }
-        ClientCommand::Server => {
-            panic!("can't happen, we're running in client mode")
-        }
+    if cli.cmd == ClientCommand::Server {
+        panic!("can't happen, we're running in client mode")
+    }
+    let port = random_port().unwrap();
+    match send(&port, &cli.cmd) {
+        Ok(_) => todo!(),
+        Err(err) => eprintln!("❌ server error '{}'", err),
     }
 }
 
@@ -69,10 +67,13 @@ fn random_port() -> std::io::Result<String> {
     Ok(nodes[n]["port"].as_str().unwrap().to_string())
 }
 
-fn send(port: &str, command: &str) -> std::io::Result<String> {
+fn send(port: &str, command: &ClientCommand) -> std::io::Result<String> {
+    let command = command.to_string();
+    println!("client > {command}");
     let mut stream = TcpStream::connect(host(port))?;
     stream.write_all(command.as_bytes())?;
     let mut response = String::new();
     stream.read_to_string(&mut response)?;
+    println!("{} < {response}", host(&port));
     Ok(response)
 }
