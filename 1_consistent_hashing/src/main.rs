@@ -19,9 +19,9 @@ enum ClientCommand {
 impl ClientCommand {
     fn to_string(&self) -> String {
         match self {
-            ClientCommand::Ping => String::from("PING"),
-            ClientCommand::Hash { plain } => format!("HASH {plain}"),
-            ClientCommand::Server => String::from("SERVER"),
+            Self::Ping => String::from("PING"),
+            Self::Hash { plain } => format!("HASH {plain}"),
+            Self::Server => String::from("SERVER"),
         }
     }
 }
