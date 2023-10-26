@@ -46,34 +46,31 @@ fn client(cli: Cli) {
     if cli.cmd == ClientCommand::Server {
         panic!("can't happen, we're running in client mode")
     }
-    let port = random_port().unwrap();
-    match send(&port, &cli.cmd) {
-        Ok(_) => todo!(),
-        Err(err) => eprintln!("❌ server error '{}'", err),
+    let host = random_host().unwrap();
+    match send(&host, &cli.cmd) {
+        Ok(response) => println!("{} ✅ success: {}", host, response),
+        Err(err) => eprintln!("{} ❌ server error '{}'", host, err),
     }
 }
 
-fn host(port: &str) -> String {
-    format!("0.0.0.0:{port}")
-}
-
-fn random_port() -> std::io::Result<String> {
+fn random_host() -> std::io::Result<String> {
     let mut file = File::open("nodes.json")?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
     let nodes: Value = serde_json::from_str(&contents)?;
     let s = nodes.as_array().unwrap().len();
     let n = rand::thread_rng().gen_range(0..s);
-    Ok(nodes[n]["port"].as_str().unwrap().to_string())
+    let port = nodes[n]["port"].as_str().unwrap().to_string();
+    Ok(format!("0.0.0.0:{port}"))
 }
 
-fn send(port: &str, command: &ClientCommand) -> std::io::Result<String> {
+fn send(host: &str, command: &ClientCommand) -> std::io::Result<String> {
     let command = command.to_string();
-    println!("client > {command}");
-    let mut stream = TcpStream::connect(host(port))?;
+    eprintln!("client > {command}");
+    let mut stream = TcpStream::connect(host)?;
     stream.write_all(command.as_bytes())?;
     let mut response = String::new();
     stream.read_to_string(&mut response)?;
-    println!("{} < {response}", host(&port));
+    eprintln!("{} < {response}", host);
     Ok(response)
 }
