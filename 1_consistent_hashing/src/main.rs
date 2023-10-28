@@ -4,6 +4,7 @@ use serde::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::TcpStream;
+use std::time::Instant;
 mod server;
 
 #[derive(Deserialize)]
@@ -16,6 +17,8 @@ struct Node {
 enum ClientCommand {
     #[command(about = "Ping random server")]
     Ping,
+    #[command(about = "Ping all servers")]
+    PingAll,
     #[command(about = "Generate bcrypt hash from plaintext")]
     Hash { plain: String },
     #[command(about = "Run in server mode")]
@@ -26,6 +29,7 @@ impl ClientCommand {
     fn to_string(&self) -> String {
         match self {
             Self::Ping => String::from("PING"),
+            Self::PingAll => String::from("PINGALL"),
             Self::Hash { plain } => format!("HASH {plain}"),
             Self::Server => String::from("SERVER"),
         }
@@ -49,20 +53,46 @@ fn main() {
 }
 
 fn client(cli: Cli) {
-    if cli.cmd == ClientCommand::Server {
-        panic!("can't happen, we're running in client mode")
+    match cli.cmd {
+        ClientCommand::Server => panic!("can't happen, we're running in client mode"),
+        ClientCommand::PingAll => ping_all(),
+        _ => forward_command_to_a_random_node(&cli.cmd),
     }
+}
+
+fn ping_all() {
+    let nodes = read_nodes().unwrap();
+    for node in nodes {
+        let host = host(&node.port);
+        let then = Instant::now();
+        match send(&host, &ClientCommand::Ping) {
+            Ok(response) => {
+                assert_eq!("PONG", response); // valid ping response
+                let now = Instant::now();
+                let elapsed = now.duration_since(then);
+                println!("{} {}ms", host, elapsed.as_micros())
+            }
+            Err(err) => eprintln!("{} ❌ server error '{}'", host, err),
+        }
+    }
+}
+
+fn forward_command_to_a_random_node(command: &ClientCommand) {
     let host = read_nodes().map(|nodes| random_host(&nodes)).unwrap();
-    match send(&host, &cli.cmd) {
+    match send(&host, command) {
         Ok(response) => println!("{} ✅ success: {}", host, response),
         Err(err) => eprintln!("{} ❌ server error '{}'", host, err),
     }
 }
 
+fn host(port: &str) -> String {
+    format!("0.0.0.0:{}", port)
+}
+
 fn random_host(nodes: &Vec<Node>) -> String {
     let random_index = rand::thread_rng().gen_range(0..nodes.len() - 1);
     let node = &nodes[random_index];
-    format!("0.0.0.0:{}", node.port)
+    host(&node.port)
 }
 
 fn read_nodes() -> std::io::Result<Vec<Node>> {
