@@ -1,10 +1,16 @@
 use clap::Parser;
 use rand::Rng;
-use serde_json::Value;
+use serde::Deserialize;
 use std::fs::File;
 use std::io::prelude::*;
 use std::net::TcpStream;
 mod server;
+
+#[derive(Deserialize)]
+struct Node {
+    id: String,
+    port: String,
+}
 
 #[derive(Parser, PartialEq, Eq, Debug)]
 enum ClientCommand {
@@ -46,22 +52,25 @@ fn client(cli: Cli) {
     if cli.cmd == ClientCommand::Server {
         panic!("can't happen, we're running in client mode")
     }
-    let host = random_host().unwrap();
+    let host = read_nodes().map(|nodes| random_host(&nodes)).unwrap();
     match send(&host, &cli.cmd) {
         Ok(response) => println!("{} ✅ success: {}", host, response),
         Err(err) => eprintln!("{} ❌ server error '{}'", host, err),
     }
 }
 
-fn random_host() -> std::io::Result<String> {
+fn random_host(nodes: &Vec<Node>) -> String {
+    let random_index = rand::thread_rng().gen_range(0..nodes.len() - 1);
+    let node = &nodes[random_index];
+    format!("0.0.0.0:{}", node.port)
+}
+
+fn read_nodes() -> std::io::Result<Vec<Node>> {
     let mut file = File::open("nodes.json")?;
     let mut contents = String::new();
     file.read_to_string(&mut contents)?;
-    let nodes: Value = serde_json::from_str(&contents)?;
-    let s = nodes.as_array().unwrap().len();
-    let n = rand::thread_rng().gen_range(0..s);
-    let port = nodes[n]["port"].as_str().unwrap().to_string();
-    Ok(format!("0.0.0.0:{port}"))
+    let nodes = serde_json::from_str(&contents)?;
+    Ok(nodes)
 }
 
 fn send(host: &str, command: &ClientCommand) -> std::io::Result<String> {
